@@ -215,6 +215,21 @@ export type InstallProcessStatus = Status<
 >;
 
 /**
+ * Information about an available script in the InvokeAI installation.
+ */
+export type ScriptInfo = {
+  /** The display name of the script (e.g. "invokeai-db-maintenance") */
+  name: string;
+  /** The full path to the script executable */
+  path: string;
+};
+
+/**
+ * The various states a script process can be in.
+ */
+export type ScriptProcessStatus = Status<'idle' | 'running' | 'completed'>;
+
+/**
  * The various states the invoke process can be in.
  */
 export type InvokeProcessStatus =
@@ -345,6 +360,20 @@ type UtilIpcEvents = Namespaced<
 >;
 
 /**
+ * Script Process API. Main process handles these events, renderer process invokes them.
+ */
+type ScriptProcessIpcEvents = Namespaced<
+  'script-process',
+  {
+    'get-available-scripts': (location: string) => ScriptInfo[];
+    'run-script': (location: string, scriptPath: string) => void;
+    'stop-script': () => void;
+    'get-status': () => WithTimestamp<ScriptProcessStatus>;
+    resize: (cols: number, rows: number) => void;
+  }
+>;
+
+/**
  * Terminal API. Main process handles these events, renderer process invokes them.
  */
 type TerminalIpcEvents = Namespaced<
@@ -364,6 +393,7 @@ type TerminalIpcEvents = Namespaced<
 export type IpcEvents = MainProcessIpcEvents &
   InstallProcessIpcEvents &
   InvokeProcessIpcEvents &
+  ScriptProcessIpcEvents &
   UtilIpcEvents &
   TerminalIpcEvents &
   StoreIpcEvents;
@@ -425,6 +455,17 @@ type InvokeProcessIpcRendererEvents = Namespaced<
 >;
 
 /**
+ * Script process events. Main process emits these events, renderer process listens to them.
+ */
+type ScriptProcessIpcRendererEvents = Namespaced<
+  'script-process',
+  {
+    status: [WithTimestamp<ScriptProcessStatus>];
+    'raw-output': [string];
+  }
+>;
+
+/**
  * Dev events. Main process emits these events, renderer process listens to them.
  */
 type DevIpcRendererEvents = Namespaced<
@@ -441,5 +482,6 @@ export type IpcRendererEvents = TerminalIpcRendererEvents &
   MainProcessIpcRendererEvents &
   InstallProcessIpcRendererEvents &
   InvokeProcessIpcRendererEvents &
+  ScriptProcessIpcRendererEvents &
   DevIpcRendererEvents &
   StoreIpcRendererEvents;

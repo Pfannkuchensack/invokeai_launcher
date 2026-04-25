@@ -6,6 +6,7 @@ import { createConsoleManager } from '@/main/console-manager';
 import { createInstallManager } from '@/main/install-manager';
 import { createInvokeManager } from '@/main/invoke-manager';
 import { MainProcessManager } from '@/main/main-process-manager';
+import { createScriptManager } from '@/main/script-manager';
 import { store } from '@/main/store';
 import {
   getHomeDirectory,
@@ -49,10 +50,15 @@ const [invoke, cleanupInvoke] = createInvokeManager({
   ipc: main.ipc,
   sendToWindow: main.sendToWindow,
 });
+const [script, cleanupScript] = createScriptManager({
+  ipc: main.ipc,
+  sendToWindow: main.sendToWindow,
+});
 
 main.ipc.handle('main-process:get-status', () => main.getStatus());
 main.ipc.handle('install-process:get-status', () => install.getStatus());
 main.ipc.handle('invoke-process:get-status', () => invoke.getStatus());
+main.ipc.handle('script-process:get-status', () => script.getStatus());
 
 //#region App lifecycle
 
@@ -65,7 +71,7 @@ async function cleanup() {
   }
   isShuttingDown = true;
 
-  const results = await Promise.allSettled([cleanupInstall(), cleanupInvoke(), cleanupConsole()]);
+  const results = await Promise.allSettled([cleanupInstall(), cleanupInvoke(), cleanupScript(), cleanupConsole()]);
   const errors = results
     .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
     .map((result) => result.reason);

@@ -6,6 +6,8 @@ import { Strong } from '@/renderer/common/Strong';
 import { installFlowApi } from '@/renderer/features/InstallFlow/state';
 import { LaunchFlowUpdateCheckerNotification } from '@/renderer/features/LaunchFlow/LaunchFlowUpdateCheckerNotification';
 import { startInvoke } from '@/renderer/features/LaunchFlow/state';
+import { ScriptRunner } from '@/renderer/features/ScriptRunner/ScriptRunner';
+import { openScriptRunner } from '@/renderer/features/ScriptRunner/state';
 import { emitter } from '@/renderer/services/ipc';
 import { selectInstallDir } from '@/renderer/services/store';
 import type { DirDetails } from '@/shared/types';
@@ -28,6 +30,10 @@ export const LaunchFlowNotRunning = memo(({ installDirDetails }: Props) => {
 
   const openDir = useCallback(() => {
     emitter.invoke('util:open-directory', installDirDetails.path);
+  }, [installDirDetails.path]);
+
+  const onOpenScripts = useCallback(() => {
+    openScriptRunner(installDirDetails.path);
   }, [installDirDetails.path]);
 
   return (
@@ -54,10 +60,15 @@ export const LaunchFlowNotRunning = memo(({ installDirDetails }: Props) => {
           Manage
         </Button>
         <Divider orientation="vertical" />
+        <Button onClick={onOpenScripts} variant="link">
+          Scripts
+        </Button>
+        <Divider orientation="vertical" />
         <Button onClick={launch} colorScheme="invokeYellow">
           Launch
         </Button>
       </BodyFooter>
+      <ScriptRunner installLocation={installDirDetails.path} />
     </BodyContainer>
   );
 });
